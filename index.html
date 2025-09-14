@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OneStop 订票 — 机票 + 酒店 + 高铁/火车</title>
+  <meta name="description" content="交互式示例订票网站：机票、酒店和高铁/火车预订，带图片与示例条目，支持本地预订模拟。"/>
+  <style>
+    /* ---------- 基础重置 ---------- */
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", Arial; background:#f6f7fb;color:#0f1724}
+    a{color:inherit}
+
+    /* ---------- 顶部导航 ---------- */
+    header{background:white;box-shadow:0 3px 12px rgba(15,23,36,0.06);position:sticky;top:0;z-index:50}
+    .container{max-width:1100px;margin:0 auto;padding:18px}
+    .nav{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand{display:flex;align-items:center;gap:10px}
+    .brand .logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#06b6d4);display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
+    .brand h1{font-size:18px;margin:0}
+
+    /* ---------- 用户卡 ---------- */
+    .user-card{display:flex;align-items:center;gap:10px}
+    .avatar{width:44px;height:44px;border-radius:999px;background:#c7d2fe;display:flex;align-items:center;justify-content:center;font-weight:600}
+    .user-info{font-size:13px}
+    .user-info b{display:block}
+
+    /* ---------- 主体布局 ---------- */
+    main{max-width:1100px;margin:24px auto;padding:0 18px}
+    .panel{display:grid;grid-template-columns:280px 1fr;gap:20px;align-items:start;}
+
+    /* 左侧菜单 */
+    .side{background:white;padding:18px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.06); position:sticky; top: 100px;}
+    .tabs{display:flex;flex-direction:column;gap:8px}
+    .tab-btn{padding:10px 12px;border-radius:8px;border:1px solid transparent;cursor:pointer;background:transparent;text-align:left; font-size: 15px;}
+    .tab-btn.active{background:linear-gradient(90deg,#eef2ff,#ecfeff);border-color:#e6eefc; color: #4f46e5; font-weight: 600;}
+
+    /* 主要区域 */
+    .content{min-height:60vh}
+    .search-bar{background:white;padding:16px;border-radius:12px;display:flex;gap:12px;align-items:center;box-shadow:0 6px 18px rgba(2,6,23,0.04)}
+    .search-field{flex:1;display:flex;gap:8px}
+    .search-field input,.search-field select{padding:10px;border-radius:8px;border:1px solid #e6edf3;width:100%}
+    .search-actions{display:flex;gap:8px}
+    .btn{padding:10px 14px;border-radius:10px;border:0;cursor:pointer; font-weight: 600;}
+    .btn.primary{background:linear-gradient(90deg,#6366f1,#06b6d4);color:white}
+    .btn.ghost{background:white;border:1px solid #e2e8f0}
+
+    /* 列表与卡片 */
+    .list{margin-top:18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+    .card{background:white;border-radius:12px;overflow:hidden;box-shadow:0 10px 24px rgba(2,6,23,0.06);display:flex;flex-direction:column; transition: transform 0.2s ease, box-shadow 0.2s ease;}
+    .card:hover{transform: translateY(-4px); box-shadow: 0 12px 28px rgba(2,6,23,0.1);}
+    .card img{width:100%;height:150px;object-fit:cover}
+    .card .body{padding:12px;flex:1;display:flex;flex-direction:column}
+    .card h3{margin:0;font-size:16px}
+    .meta{font-size:13px;color:#475569;margin-top:6px}
+    .card .actions{display:flex;gap:8px;margin-top:12px}
+
+    /* 特色横幅 */
+    .hero{background:linear-gradient(90deg,#eef2ff,#ecfeff);padding:18px;border-radius:12px;display:flex;gap:12px;align-items:center}
+    .hero img{width:160px;height:100px;object-fit:cover;border-radius:8px}
+
+    /* Modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:100}
+    .modal{background:white;border-radius:12px;max-width:760px;width:100%;overflow:hidden}
+    .modal .modal-body{display:flex;gap:12px}
+    .modal .modal-body img{width:260px;height:180px;object-fit:cover}
+    .modal .modal-content{padding:18px}
+
+    /* 预订成功提示 */
+    .toast{position:fixed;right:20px;bottom:20px;background:#0f1724;color:white;padding:12px 16px;border-radius:10px;display:none;z-index:110}
+
+    /* 响应式 */
+    @media (max-width:880px){.panel{grid-template-columns:1fr}.side{order:2; position: static;}.search-bar{flex-direction:column;align-items:stretch}.modal .modal-body{flex-direction:column}.modal .modal-body img{width:100%}}
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container nav">
+    <div class="brand">
+      <div class="logo">OS</div>
+      <div>
+        <h1>OneStop 订票</h1>
+        <div style="font-size:12px;color:#475569">一站式预订：机票 · 酒店 · 高铁/火车</div>
+      </div>
+    </div>
+
+    <div class="user-card">
+      <div class="avatar" id="avatar">D</div>
+      <div class="user-info">
+        <b id="username">doraemon</b>
+        <div id="useremail">doraemon@gmail.com</div>
+      </div>
+      <button class="btn ghost" onclick="openOrdersModal()">我的订单</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="panel">
+    <aside class="side">
+      <div style="font-weight:700;margin-bottom:8px">快速导航</div>
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="flights" onclick="switchTab('flights', this)">✈️ 机票</button>
+        <button class="tab-btn" data-tab="hotels" onclick="switchTab('hotels', this)">🏨 酒店</button>
+        <button class="tab-btn" data-tab="trains" onclick="switchTab('trains', this)">🚄 高铁 / 火车</button>
+        <button class="tab-btn" data-tab="deals" onclick="switchTab('deals', this)">🔥 今日特惠</button>
+      </div>
+
+      <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #f1f5f9;">
+        <h3 style="margin-top:0; font-size: 16px;">关于 OneStop</h3>
+        <p style="color:#475569; line-height: 1.7; font-size: 14px; margin-bottom: 0;">
+          OneStop 订票平台致力于为您提供无缝、高效的一站式旅行预订体验。我们整合了全球数千家航空公司的实时数据、覆盖主要城市的优质酒店网络，以及国家高铁系统，让您轻松规划从机票、住宿到地面交通的每一个环节。
+        </p>
+      </div>
+    </aside>
+
+    <section class="content">
+      <div class="hero">
+        <div style="flex:1">
+          <h2 style="margin:0">探索下一次旅行</h2>
+          <div style="color:#475569;margin-top:8px">搜索机票、酒店或高铁，查看详细信息并完成预订。</div>
+        </div>
+        <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=60" alt="travel-hero">
+      </div>
+
+      <div id="searchFlights" class="search-bar" style="margin-top:14px">
+        <div class="search-field">
+          <input id="from" placeholder="出发地（城市或机场）" value="北京 (PEK)" />
+          <input id="to" placeholder="目的地（城市或机场）" value="上海 (PVG)" />
+          <input id="departDate" type="date" />
+          <select id="cabin">
+            <option>经济舱</option>
+            <option>高级经济</option>
+            <option>商务舱</option>
+          </select>
+        </div>
+        <div class="search-actions">
+          <button class="btn ghost" onclick="randomizeFlightSearch()">随机推荐</button>
+          <button class="btn primary" onclick="filterFlights()">搜索机票</button>
+        </div>
+      </div>
+
+      <div id="searchHotels" class="search-bar" style="margin-top:14px;display:none">
+        <div class="search-field">
+          <input id="hotelCity" placeholder="城市，例如：上海" />
+          <input id="checkin" type="date" />
+          <input id="checkout" type="date" />
+          <select id="rooms"><option>1 间</option><option>2 间</option></select>
+        </div>
+        <div class="search-actions">
+          <button class="btn ghost" onclick="randomizeHotelSearch()">给我惊喜</button>
+          <button class="btn primary" onclick="filterHotels()">搜索酒店</button>
+        </div>
+      </div>
+
+      <div id="searchTrains" class="search-bar" style="margin-top:14px;display:none">
+        <div class="search-field">
+          <input id="trainFrom" placeholder="出发站" />
+          <input id="trainTo" placeholder="到达站" />
+          <input id="trainDate" type="date" />
+          <select id="seatClass"><option>二等座</option><option>一等座</option><option>商务座</option></select>
+        </div>
+        <div class="search-actions">
+          <button class="btn ghost" onclick="randomizeTrainSearch()">附近热门</button>
+          <button class="btn primary" onclick="filterTrains()">搜索车票</button>
+        </div>
+      </div>
+
+      <div id="tabContent" style="margin-top:16px">
+        <div id="flights" class="tab-pane">
+          <div style="display:flex;gap:14px;align-items:center;justify-content:space-between">
+            <h3>热门机票推荐</h3>
+            <div style="color:#475569;font-size:13px">共 <span id="flightCount">0</span> 条结果</div>
+          </div>
+          <div class="list" id="flightList"></div>
+        </div>
+        <div id="hotels" class="tab-pane" style="display:none">
+          <div style="display:flex;gap:14px;align-items:center;justify-content:space-between">
+            <h3>精选酒店</h3>
+            <div style="color:#475569;font-size:13px">共 <span id="hotelCount">0</span> 家</div>
+          </div>
+          <div class="list" id="hotelList"></div>
+        </div>
+        <div id="trains" class="tab-pane" style="display:none">
+          <div style="display:flex;gap:14px;align-items:center;justify-content:space-between">
+            <h3>高铁 / 火车车次</h3>
+            <div style="color:#475569;font-size:13px">共 <span id="trainCount">0</span> 条</div>
+          </div>
+          <div class="list" id="trainList"></div>
+        </div>
+        <div id="deals" class="tab-pane" style="display:none">
+          <h3>今日特惠</h3>
+          <div class="list" id="dealList"></div>
+        </div>
+      </div>
+      
+    </section>
+  </div>
+</main>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-body">
+      <img id="modalImg" src="" alt="item image">
+      <div class="modal-content">
+        <h2 id="modalTitle">标题</h2>
+        <div id="modalMeta" class="meta"></div>
+        <p id="modalDesc" style="margin-top:10px;color:#475569">详细描述</p>
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button class="btn primary" id="bookNowBtn">立即预订</button>
+          <button class="btn ghost" onclick="closeModal()">取消</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="ordersModalBackdrop">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="ordersModalTitle">
+        <div class="modal-content" style="padding: 24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2 id="ordersModalTitle" style="margin:0;">我的订单</h2>
+                <button class="btn ghost" onclick="closeOrdersModal()">关闭</button>
+            </div>
+            <div id="ordersList" style="margin-top: 18px; max-height: 60vh; overflow-y: auto;">
+                </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="toast" id="toast">已加入订单</div>
+
+<script>
+// ---------- 示例数据（包含图片、文字示例） ----------
+const sampleFlights = [
+  {id: 'F001', from:'北京 (PEK)', to:'上海 (PVG)', depart:'2025-09-20 09:20', arrive:'2025-09-20 11:10', duration:'1h50m', price:520, airline:'中国国航', img:'https://pic.c-ctrip.com/flight/fuzzy/HET/640.jpg', desc:'早班直飞，含免费行李1件，适合商务与短途出行。'},
+  {id:'F002', from:'广州 (CAN)', to:'成都 (CTU)', depart:'2025-10-02 13:45', arrive:'2025-10-02 16:00', duration:'2h15m', price:420, airline:'南方航空', img:'https://pic.c-ctrip.com/flight/fuzzy/DSN/640.jpg', desc:'下午出行，经济舱特价，可选择提前选座。'},
+  {id:'F003', from:'深圳 (SZX)', to:'香港 (HKG)', depart:'2025-09-28 18:00', arrive:'2025-09-28 19:00', duration:'1h0m', price:300, airline:'香港航空', img:'https://pic.c-ctrip.com/flight/fuzzy/CIF/640.jpg', desc:'短途跨境航线，航班频繁，适合周末出行。'},
+  {id:'F004', from:'上海 (PVG)', to:'东京 (NRT)', depart:'2025-11-05 08:30', arrive:'2025-11-05 12:00', duration:'3h30m', price:1800, airline:'日本航空', img:'https://pic.c-ctrip.com/flight/fuzzy/TGO/640.jpg', desc:'含餐食与娱乐系统，适合度假出行。'},
+  {id:'F005', from:'北京 (PEK)', to:'杭州 (HGH)', depart:'2025-09-30 07:00', arrive:'2025-09-30 08:10', duration:'1h10m', price:450, airline:'东方航空', img:'https://pic.c-ctrip.com/flight/fuzzy/NGB/640.jpg', desc:'早晨航班，节省时间，含快速安检通道。'}
+];
+
+const sampleHotels = [
+  {id:'H001', name:'浦东凯悦酒店', city:'上海', price:950, rating:4.7, img:'https://dimg04.c-ctrip.com/images/0205z12000ds9olohCCF6_R_300_225_R5_Q70_D.jpg', desc:'浦东滨江豪华酒店，靠近地铁与会展中心，含早餐。'},
+  {id:'H002', name:'湾区精品酒店', city:'深圳', price:420, rating:4.3, img:'https://dimg04.c-ctrip.com/images/1mc0i12000noxzra99523_R_300_225_R5_Q70_D.jpg', desc:'设计感强的小众精品酒店，适合拍照与情侣出游。'},
+  {id:'H003', name:'锦江之星经济型', city:'北京', price:220, rating:3.9, img:'https://dimg04.c-ctrip.com/images/1mc0i12000noxzra99523_R_300_225_R5_Q70_D.jpg', desc:'性价比高，位置便利，适合商务差旅。'},
+  {id:'H004', name:'日式温泉酒店', city:'东京', price:1280, rating:4.8, img:'https://dimg04.c-ctrip.com/images/1mc3t12000g7nhpenDA01_R_300_225_R5_Q70_D.jpg', desc:'正宗温泉体验，带私人温泉池和传统料理。'},
+  {id:'H005', name:'海景度假村', city:'三亚', price:1500, rating:4.9, img:'https://dimg04.c-ctrip.com/images/0203v12000a29gwut7FC9_R_300_225_R5_Q70_D.jpg', desc:'面向大海的私人海滩，适合家庭度假。'}
+];
+
+const sampleTrains = [
+  {id:'T001', from:'北京南', to:'上海虹桥', depart:'2025-09-22 07:00', arrive:'2025-09-22 12:30', duration:'5h30m', price:553, type:'高铁G字', img:'https://pic.c-ctrip.com/railway_v2/zzz_236152.jpg', desc:'高铁G字头，商务一等二等座可选，速度快。'},
+  {id:'T002', from:'广州南', to:'深圳北', depart:'2025-09-25 18:30', arrive:'2025-09-25 19:20', duration:'0h50m', price:76, type:'高铁D字', img:'https://pic.c-ctrip.com/railway_v2/zzz_236152_2.jpg', desc:'短途通勤高铁，班次频繁，适合商务和日常出差。'},
+  {id:'T003', from:'杭州东', to:'南京南', depart:'2025-10-01 09:10', arrive:'2025-10-01 10:40', duration:'1h30m', price:128, type:'动车', img:'https://pic.c-ctrip.com/railway_v2/zzz_236152_3.jpg', desc:'动车组列车，速度稳定，适合周末短途。'},
+  {id:'T004', from:'成都东', to:'重庆北', depart:'2025-11-03 14:25', arrive:'2025-11-03 16:10', duration:'1h45m', price:99, type:'动车', img:'https://dimg04.c-ctrip.com/images/0300a12000cvcziegB378_C_210_118_Q100.jpg', desc:'高铁网络覆盖，含充电插座与免费WiFi。'},
+  {id:'T005', from:'北京西', to:'西安北', depart:'2025-09-29 20:00', arrive:'2025-09-30 02:30', duration:'6h30m', price:420, type:'动卧/夜间', img:'https://dimg04.c-ctrip.com/images/0300a12000cvcziegB378_C_210_118_Q100.jpg', desc:'夜班车，可选卧铺，节省白天时间。'}
+];
+
+const sampleDeals = [
+  {id:'D001', title:'周末特惠：北京—上海往返 799元起', img:'https://dimg04.c-ctrip.com/images/0205z12000ds9olohCCF6_R_300_225_R5_Q70_D.jpg', desc:'限时促销，座位有限，先到先得。'},
+  {id:'D002', title:'三亚海景度假：买2晚送1晚', img:'https://dimg04.c-ctrip.com/images/1mc0i12000noxzra99523_R_300_225_R5_Q70_D.jpg', desc:'适用指定日期，需提前预订。'},
+  {id:'D003', title:'东京酒店套餐：4天3晚机+酒 2999元', img:'https://dimg04.c-ctrip.com/images/1mc3t12000g7nhpenDA01_R_300_225_R5_Q70_D.jpg', desc:'包含往返机票与市中心三星级酒店，性价比之选。'},
+  {id:'D004', title:'高铁动卧专享：夜间卧铺8折优惠', img:'https://pic.c-ctrip.com/railway_v2/zzz_236152_2.jpg', desc:'预订北京至西安的夜间动卧车票，享受专属折扣，节省时间和住宿费。'},
+  {id:'D005', title:'成都美食探索：酒店+熊猫基地门票', img:'https://dimg04.c-ctrip.com/images/0300a12000cvcziegB378_C_210_118_Q100.jpg', desc:'入住精品酒店，赠送熊猫基地门票两张，体验天府之国的魅力。'}
+];
+
+// ---------- 渲染函数 ----------
+function $(id){return document.getElementById(id)}
+
+function renderFlights(list){
+  const container = $('flightList'); container.innerHTML='';
+  list.forEach(f=>{
+    const card = document.createElement('div'); card.className='card';
+    card.innerHTML = `
+      <img src="${f.img}" alt="flight image">
+      <div class="body">
+        <h3>${f.from} → ${f.to}</h3>
+        <div class="meta">${f.airline} • ${f.depart} → ${f.arrive} • ${f.duration}</div>
+        <div style="margin-top:auto;display:flex;align-items:center;justify-content:space-between">
+          <div style="font-weight:700">¥${f.price}</div>
+          <div class="actions">
+            <button class="btn ghost" onclick='viewDetails(${JSON.stringify(f)})'>查看详情</button>
+            <button class="btn primary" onclick='bookItem(${JSON.stringify(f)})'>预订</button>
+          </div>
+        </div>
+      </div>`;
+    container.appendChild(card);
+  });
+  $('flightCount').innerText = list.length;
+}
+
+function renderHotels(list){
+  const container = $('hotelList'); container.innerHTML='';
+  list.forEach(h=>{
+    const card = document.createElement('div'); card.className='card';
+    card.innerHTML = `
+      <img src="${h.img}" alt="hotel image">
+      <div class="body">
+        <h3>${h.name}</h3>
+        <div class="meta">${h.city} • 评分 ${h.rating} • 起 ¥${h.price}</div>
+        <div style="margin-top:auto;display:flex;align-items:center;justify-content:space-between">
+          <div class="actions">
+            <button class="btn ghost" onclick='viewDetails(${JSON.stringify(h)})'>查看</button>
+            <button class="btn primary" onclick='bookItem(${JSON.stringify(h)})'>预订</button>
+          </div>
+        </div>
+      </div>`;
+    container.appendChild(card);
+  });
+  $('hotelCount').innerText = list.length;
+}
+
+function renderTrains(list){
+  const container = $('trainList'); container.innerHTML='';
+  list.forEach(t=>{
+    const card = document.createElement('div'); card.className='card';
+    card.innerHTML = `
+      <img src="${t.img}" alt="train image">
+      <div class="body">
+        <h3>${t.from} → ${t.to}</h3>
+        <div class="meta">${t.type} • ${t.depart} → ${t.arrive} • ${t.duration}</div>
+        <div style="margin-top:auto;display:flex;align-items:center;justify-content:space-between">
+          <div style="font-weight:700">¥${t.price}</div>
+          <div class="actions">
+            <button class="btn ghost" onclick='viewDetails(${JSON.stringify(t)})'>详情</button>
+            <button class="btn primary" onclick='bookItem(${JSON.stringify(t)})'>预订</button>
+          </div>
+        </div>
+      </div>`;
+    container.appendChild(card);
+  });
+  $('trainCount').innerText = list.length;
+}
+
+function renderDeals(list){
+  const container = $('dealList'); container.innerHTML='';
+  list.forEach(d=>{
+    const card = document.createElement('div'); card.className='card';
+    card.innerHTML = `
+      <img src="${d.img}" alt="deal image">
+      <div class="body">
+        <h3>${d.title}</h3>
+        <div class="meta">${d.desc}</div>
+        <div style="margin-top:auto;display:flex;align-items:center;justify-content:flex-end">
+          <button class="btn primary" onclick='viewDetails(${JSON.stringify(d)})'>查看并抢购</button>
+        </div>
+      </div>`;
+    container.appendChild(card);
+  });
+}
+
+// 初始渲染
+renderFlights(sampleFlights);
+renderHotels(sampleHotels);
+renderTrains(sampleTrains);
+renderDeals(sampleDeals);
+
+// ---------- 交互逻辑 ----------
+let currentTab = 'flights';
+function switchTab(tab, el){
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  if(el) el.classList.add('active');
+  ['flights','hotels','trains','deals'].forEach(t=>{
+    const searchBarId = 'search' + capitalize(t);
+    if ($(searchBarId)) {
+        $(searchBarId).style.display = (t === tab && t !== 'deals') ? 'flex' : 'none';
+    }
+    $(t).style.display = (t===tab) ? 'block' : 'none';
+  });
+}
+
+function capitalize(s){return s.charAt(0).toUpperCase()+s.slice(1)}
+
+function viewDetails(item){
+  $('modalImg').src = item.img || '';
+  $('modalTitle').innerText = (item.title || (item.name || (item.from + ' → ' + item.to)));
+  $('modalMeta').innerText = item.airline ? `${item.airline} • ¥${item.price}` : (item.city ? `${item.city} • ¥${item.price}` : (item.type ? `${item.type} • ¥${item.price}` : ''));
+  $('modalDesc').innerText = item.desc || '无更多描述。';
+  $('bookNowBtn').onclick = ()=>bookItem(item);
+  openModal();
+}
+
+function openModal(){ $('modalBackdrop').style.display='flex'; }
+function closeModal(){ $('modalBackdrop').style.display='none'; }
+
+function bookItem(item){
+  const orders = JSON.parse(localStorage.getItem('os_orders')||'[]');
+  const order = {id: item.id || ('X'+Date.now()), type: currentTab, title: item.title || item.name || (item.from+' → '+item.to), price: item.price || 0, time: new Date().toISOString()};
+  orders.push(order);
+  localStorage.setItem('os_orders', JSON.stringify(orders));
+  showToast('已加入订单：' + order.title);
+  closeModal();
+}
+
+function showToast(text){
+  const t = $('toast'); t.innerText = text; t.style.display='block';
+  setTimeout(()=>{t.style.display='none'},2500);
+}
+
+// --- 我的订单交互 ---
+function openOrdersModal() {
+    const orders = JSON.parse(localStorage.getItem('os_orders') || '[]');
+    const container = $('ordersList');
+    container.innerHTML = '';
+
+    if (!orders.length) {
+        container.innerHTML = '<p style="color:#475569;text-align:center;margin-top:20px;">暂无本地模拟订单。</p>';
+    } else {
+        orders.forEach((o, index) => {
+            const orderEl = document.createElement('div');
+            orderEl.style = 'display:flex; justify-content:space-between; align-items:center; padding: 12px 0; border-bottom: 1px solid #f1f5f9;';
+            orderEl.innerHTML = `
+                <div>
+                    <b style="font-size:15px;">[${o.type.replace('s', '').toUpperCase()}] ${o.title}</b>
+                    <div style="font-size:13px; color:#475569; margin-top:4px;">
+                        价格：¥${o.price} | 预订时间：${new Date(o.time).toLocaleString()}
+                    </div>
+                </div>
+                <button class="btn ghost" style="padding: 6px 10px; border-color: #ef4444; color: #ef4444;" onclick="removeBooking(${index})">取消订单</button>
+            `;
+            container.appendChild(orderEl);
+        });
+    }
+    $('ordersModalBackdrop').style.display = 'flex';
+}
+
+function closeOrdersModal() {
+    $('ordersModalBackdrop').style.display = 'none';
+}
+
+function removeBooking(index) {
+    if (confirm('确定要取消这个订单吗？')) {
+        let orders = JSON.parse(localStorage.getItem('os_orders') || '[]');
+        orders.splice(index, 1);
+        localStorage.setItem('os_orders', JSON.stringify(orders));
+        showToast('订单已取消');
+        openOrdersModal(); 
+    }
+}
+
+// 简单搜索过滤
+function filterFlights(){
+  const from = $('from').value.toLowerCase(); const to = $('to').value.toLowerCase();
+  const filtered = sampleFlights.filter(f=> f.from.toLowerCase().includes(from) && f.to.toLowerCase().includes(to));
+  renderFlights(filtered.length?filtered:sampleFlights);
+}
+function filterHotels(){ const city = $('hotelCity').value.toLowerCase(); const filtered = sampleHotels.filter(h=>h.city.toLowerCase().includes(city)); renderHotels(filtered.length?filtered:sampleHotels); }
+function filterTrains(){ const from = $('trainFrom').value.toLowerCase(); const to = $('trainTo').value.toLowerCase(); const filtered = sampleTrains.filter(t=>t.from.toLowerCase().includes(from) && t.to.toLowerCase().includes(to)); renderTrains(filtered.length?filtered:sampleTrains); }
+
+// 随机推荐功能
+function randomizeFlightSearch(){ const idx = Math.floor(Math.random()*sampleFlights.length); viewDetails(sampleFlights[idx]); }
+function randomizeHotelSearch(){ const idx = Math.floor(Math.random()*sampleHotels.length); viewDetails(sampleHotels[idx]); }
+function randomizeTrainSearch(){ const idx = Math.floor(Math.random()*sampleTrains.length); viewDetails(sampleTrains[idx]); }
+
+// 页面加载时设默认日期为今天
+window.addEventListener('load', ()=>{
+  const today = new Date().toISOString().slice(0,10);
+  if($('departDate')) $('departDate').value = today;
+  if($('checkin')) $('checkin').value = today;
+  if($('checkout')) {$('checkout').value = new Date(Date.now()+86400000).toISOString().slice(0,10)}
+  if($('trainDate')) $('trainDate').value = today;
+});
+
+</script>
+
+</body>
+</html>
