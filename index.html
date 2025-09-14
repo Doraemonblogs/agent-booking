@@ -64,7 +64,7 @@
     .modal{background:white;border-radius:12px;max-width:760px;width:100%;overflow:hidden}
     .modal .modal-body{display:flex;gap:12px}
     .modal .modal-body img{width:260px;height:180px;object-fit:cover}
-    .modal .modal-content{padding:18px}
+    .modal .modal-content{padding:18px; flex: 1;}
 
     /* 预订成功提示 */
     .toast{position:fixed;right:20px;bottom:20px;background:#0f1724;color:white;padding:12px 16px;border-radius:10px;display:none;z-index:110}
@@ -202,16 +202,7 @@
 <div class="modal-backdrop" id="modalBackdrop">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modal-body">
-      <img id="modalImg" src="" alt="item image">
-      <div class="modal-content">
-        <h2 id="modalTitle">标题</h2>
-        <div id="modalMeta" class="meta"></div>
-        <p id="modalDesc" style="margin-top:10px;color:#475569">详细描述</p>
-        <div style="margin-top:12px;display:flex;gap:8px">
-          <button class="btn primary" id="bookNowBtn">立即预订</button>
-          <button class="btn ghost" onclick="closeModal()">取消</button>
-        </div>
-      </div>
+      
     </div>
   </div>
 </div>
@@ -243,11 +234,11 @@ const sampleFlights = [
 ];
 
 const sampleHotels = [
-  {id:'H001', name:'Pudong Hyatt Hotel', city:'上海', price:950, rating:4.7, img:'https://dimg04.c-ctrip.com/images/0205z12000ds9olohCCF6_R_300_225_R5_Q70_D.jpg', desc:'Experience luxury at this Pudong riverside hotel, conveniently located near the metro and convention center. Breakfast is included. <a href="https://shopping-gamma-two.vercel.app/intro" target="_blank" rel="noopener noreferrer">Learn more details</a>.'},
-  {id:'H002', name:'Bay Area Boutique Hotel', city:'深圳', price:420, rating:4.3, img:'https://dimg04.c-ctrip.com/images/1mc0i12000noxzra99523_R_300_225_R5_Q70_D.jpg', desc:'设计感强的小众精品酒店，适合拍照与情侣出游。'},
-  {id:'H003', name:'Jinjiang Inn Economy', city:'北京', price:220, rating:3.9, img:'https://dimg04.c-ctrip.com/images/1mc0i12000noxzra99523_R_300_225_R5_Q70_D.jpg', desc:'性价比高，位置便利，适合商务差旅。'},
-  {id:'H004', name:'Japanese Onsen Hotel', city:'东京', price:1280, rating:4.8, img:'https://dimg04.c-ctrip.com/images/1mc3t12000g7nhpenDA01_R_300_225_R5_Q70_D.jpg', desc:'正宗温泉体验，带私人温泉池和传统料理。'},
-  {id:'H005', name:'Sea View Resort', city:'三亚', price:1500, rating:4.9, img:'https://dimg04.c-ctrip.com/images/0203v12000a29gwut7FC9_R_300_225_R5_Q70_D.jpg', desc:'面向大海的私人海滩，适合家庭度假。'}
+  {id:'H001', name:'Pudong Hyatt Hotel', city:'上海', price:950, rating:4.7, img:'https://dimg04.c-ctrip.com/images/0205z12000ds9olohCCF6_R_300_225_R5_Q70_D.jpg', desc:'Experience luxury at this Pudong riverside hotel, conveniently located near the metro and convention center. Breakfast is included. <a href="https://shopping-gamma-two.vercel.app/intro" target="_blank" rel="noopener noreferrer">Learn more details</a>.'},
+  {id:'H002', name:'Bay Area Boutique Hotel', city:'深圳', price:420, rating:4.3, img:'https://dimg04.c-ctrip.com/images/1mc0i12000noxzra99523_R_300_225_R5_Q70_D.jpg', desc:'设计感强的小众精品酒店，适合拍照与情侣出游。'},
+  {id:'H003', name:'Jinjiang Inn Economy', city:'北京', price:220, rating:3.9, img:'https://dimg04.c-ctrip.com/images/1mc0i12000noxzra99523_R_300_225_R5_Q70_D.jpg', desc:'性价比高，位置便利，适合商务差旅。'},
+  {id:'H004', name:'Japanese Onsen Hotel', city:'东京', price:1280, rating:4.8, img:'https://dimg04.c-ctrip.com/images/1mc3t12000g7nhpenDA01_R_300_225_R5_Q70_D.jpg', desc:'正宗温泉体验，带私人温泉池和传统料理。'},
+  {id:'H005', name:'Sea View Resort', city:'三亚', price:1500, rating:4.9, img:'https://dimg04.c-ctrip.com/images/0203v12000a29gwut7FC9_R_300_225_R5_Q70_D.jpg', desc:'面向大海的私人海滩，适合家庭度假。'}
 ];
 
 const sampleTrains = [
@@ -282,7 +273,7 @@ function renderFlights(list){
           <div style="font-weight:700">¥${f.price}</div>
           <div class="actions">
             <button class="btn ghost" onclick='viewDetails(${JSON.stringify(f)})'>查看详情</button>
-            <button class="btn primary" onclick='bookItem(${JSON.stringify(f)})'>预订</button>
+            <button class="btn primary" onclick='viewDetails(${JSON.stringify(f)})'>预订</button>
           </div>
         </div>
       </div>`;
@@ -300,10 +291,10 @@ function renderHotels(list){
       <div class="body">
         <h3>${h.name}</h3>
         <div class="meta">${h.city} • 评分 ${h.rating} • 起 ¥${h.price}</div>
-        <div style="margin-top:auto;display:flex;align-items:center;justify-content:space-between">
+        <div style="margin-top:auto;display:flex;align-items:center;justify-content:flex-end">
           <div class="actions">
             <button class="btn ghost" onclick='viewDetails(${JSON.stringify(h)})'>查看</button>
-            <button class="btn primary" onclick='bookItem(${JSON.stringify(h)})'>预订</button>
+            <button class="btn primary" onclick='viewDetails(${JSON.stringify(h)})'>预订</button>
           </div>
         </div>
       </div>`;
@@ -325,7 +316,7 @@ function renderTrains(list){
           <div style="font-weight:700">¥${t.price}</div>
           <div class="actions">
             <button class="btn ghost" onclick='viewDetails(${JSON.stringify(t)})'>详情</button>
-            <button class="btn primary" onclick='bookItem(${JSON.stringify(t)})'>预订</button>
+            <button class="btn primary" onclick='viewDetails(${JSON.stringify(t)})'>预订</button>
           </div>
         </div>
       </div>`;
@@ -374,14 +365,56 @@ function switchTab(tab, el){
 
 function capitalize(s){return s.charAt(0).toUpperCase()+s.slice(1)}
 
-function viewDetails(item){
-  $('modalImg').src = item.img || '';
-  $('modalTitle').innerText = (item.title || (item.name || (item.from + ' → ' + item.to)));
-  $('modalMeta').innerText = item.airline ? `${item.airline} • ¥${item.price}` : (item.city ? `${item.city} • ¥${item.price}` : (item.type ? `${item.type} • ¥${item.price}` : ''));
-  $('modalDesc').innerText = item.desc || '无更多描述。';
-  $('bookNowBtn').onclick = ()=>bookItem(item);
-  openModal();
+// --- [MODIFIED] Modal booking flow ---
+
+function viewDetails(item) {
+    renderDetailView(item);
+    openModal();
 }
+
+function renderDetailView(item) {
+    const modalBody = document.querySelector('#modalBackdrop .modal-body');
+    const title = item.title || item.name || (item.from + ' → ' + item.to);
+    const meta = item.airline ? `${item.airline} • ¥${item.price}` : (item.city ? `评分 ${item.rating} • ¥${item.price}` : (item.type ? `${item.type} • ¥${item.price}` : ''));
+    
+    modalBody.innerHTML = `
+        <img src="${item.img || ''}" alt="item image">
+        <div class="modal-content">
+            <h2 id="modalTitle">${title}</h2>
+            <div id="modalMeta" class="meta">${meta}</div>
+            <div id="modalDesc" style="margin-top:10px;color:#475569; line-height: 1.6;">${item.desc || '无更多描述。'}</div>
+            <div style="margin-top:auto; padding-top:12px; display:flex; gap:8px;">
+                <button class="btn primary" id="proceedToBookBtn">立即预订</button>
+                <button class="btn ghost" onclick="closeModal()">取消</button>
+            </div>
+        </div>
+    `;
+    modalBody.querySelector('#proceedToBookBtn').onclick = () => renderConfirmationView(item);
+}
+
+function renderConfirmationView(item) {
+    const modalBody = document.querySelector('#modalBackdrop .modal-body');
+    const title = item.title || item.name || (item.from + ' → ' + item.to);
+    const price = item.price || 0;
+
+    modalBody.innerHTML = `
+        <div class="modal-content" style="padding: 24px;">
+            <h2 id="modalTitle">提交订单</h2>
+            <p style="margin-top:10px; color:#475569;">请确认您的预订信息。点击“确认支付”后将为您生成订单。</p>
+            <div style="background:#f6f7fb; padding:14px; border-radius:8px; margin-top:12px; font-size: 14px; line-height: 1.6;">
+                <b>预订项目:</b> ${title}<br>
+                <b>支付金额:</b> <span style="font-weight:700; color:#4f46e5; font-size: 16px;">¥${price}</span>
+            </div>
+            <div style="margin-top:18px; display:flex; gap:8px;">
+                <button class="btn primary" id="confirmPaymentBtn">确认支付</button>
+                <button class="btn ghost" id="backToDetailsBtn">返回</button>
+            </div>
+        </div>
+    `;
+    modalBody.querySelector('#confirmPaymentBtn').onclick = () => bookItem(item);
+    modalBody.querySelector('#backToDetailsBtn').onclick = () => renderDetailView(item);
+}
+
 
 function openModal(){ $('modalBackdrop').style.display='flex'; }
 function closeModal(){ $('modalBackdrop').style.display='none'; }
@@ -391,7 +424,7 @@ function bookItem(item){
   const order = {id: item.id || ('X'+Date.now()), type: currentTab, title: item.title || item.name || (item.from+' → '+item.to), price: item.price || 0, time: new Date().toISOString()};
   orders.push(order);
   localStorage.setItem('os_orders', JSON.stringify(orders));
-  showToast('已加入订单：' + order.title);
+  showToast('支付成功！订单已为您生成');
   closeModal();
 }
 
@@ -409,7 +442,7 @@ function openOrdersModal() {
     if (!orders.length) {
         container.innerHTML = '<p style="color:#475569;text-align:center;margin-top:20px;">暂无本地模拟订单。</p>';
     } else {
-        orders.forEach((o, index) => {
+        orders.reverse().forEach((o, index) => {
             const orderEl = document.createElement('div');
             orderEl.style = 'display:flex; justify-content:space-between; align-items:center; padding: 12px 0; border-bottom: 1px solid #f1f5f9;';
             orderEl.innerHTML = `
@@ -434,8 +467,8 @@ function closeOrdersModal() {
 function removeBooking(index) {
     if (confirm('确定要取消这个订单吗？')) {
         let orders = JSON.parse(localStorage.getItem('os_orders') || '[]');
-        orders.splice(index, 1);
-        localStorage.setItem('os_orders', JSON.stringify(orders));
+        orders.reverse().splice(index, 1);
+        localStorage.setItem('os_orders', JSON.stringify(orders.reverse()));
         showToast('订单已取消');
         openOrdersModal(); 
     }
